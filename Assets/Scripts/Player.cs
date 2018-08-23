@@ -71,7 +71,10 @@ public class Player : MonoBehaviour {
 
         transform.position = new Vector2(newXpos, newYpos);
 
+  
 
-       
+
     }
+       
+    
 }
