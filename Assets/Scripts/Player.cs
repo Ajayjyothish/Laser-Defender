@@ -13,7 +13,7 @@ public class Player : MonoBehaviour
     [SerializeField] float LaserDelay=0.1f;
     [SerializeField] float PlayerHealth=5f;
 
-    
+    //cached references
     GameObject laser;
     float xMaxBound, xMinBound, yMinBound, yMaxBound;
     Coroutine fireContinuously;
@@ -87,6 +87,6 @@ public class Player : MonoBehaviour
         if (PlayerHealth <= 0)
             Destroy(gameObject);
     }
-
+    
 
 }
