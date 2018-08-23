@@ -3,22 +3,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour {
+public class Player : MonoBehaviour
+{
     //config parameters
-    [SerializeField] float PlayerSpeed =1f;
+    [SerializeField] float PlayerSpeed = 1f;
     [SerializeField] float BoundaryPadding = 1f;
     [SerializeField] GameObject PlayerLaser;
     [SerializeField] float LaserSpeed = 5f;
-    [SerializeField] float LaserDelay;
+    [SerializeField] float LaserDelay=0.1f;
+    [SerializeField] float PlayerHealth=5f;
 
-
-    GameObject laser;
-    float xMaxBound,xMinBound,yMinBound,yMaxBound;
-    Coroutine fireContinuously;
     
-	void Start () {
+    GameObject laser;
+    float xMaxBound, xMinBound, yMinBound, yMaxBound;
+    Coroutine fireContinuously;
+
+    void Start()
+    {
         SetUpMoveBoundaries();
-	}
+        PlayerHealth *= 2;
+    }
 
     private void SetUpMoveBoundaries()
     {
@@ -29,25 +33,26 @@ public class Player : MonoBehaviour {
         yMaxBound = gameCamera.ViewportToWorldPoint(new Vector3(0, 1, 0)).y;
     }
 
-    void Update () {
+    void Update()
+    {
         Move();
         Fire();
     }
 
     private void Fire()
     {
-        
+
         if (Input.GetButtonDown("Fire1"))
         {
-            
-             fireContinuously= StartCoroutine(FireAndWait());
-           
+
+            fireContinuously = StartCoroutine(FireAndWait());
+
         }
 
         if (Input.GetButtonUp("Fire1"))
         {
             StopCoroutine(fireContinuously);
-            
+
         }
     }
 
@@ -56,6 +61,7 @@ public class Player : MonoBehaviour {
         while (true)
         {
             laser = Instantiate(PlayerLaser, transform.position, transform.rotation);
+            
             laser.GetComponent<Rigidbody2D>().velocity = new Vector2(0, LaserSpeed);
             yield return new WaitForSeconds(LaserDelay);
         }
@@ -63,15 +69,24 @@ public class Player : MonoBehaviour {
 
     private void Move()
     {
-        var deltaX = Input.GetAxis("Horizontal") * Time.deltaTime* PlayerSpeed;
-        var newXpos = Mathf.Clamp(transform.position.x + deltaX,xMinBound+BoundaryPadding,xMaxBound-BoundaryPadding);
+        var deltaX = Input.GetAxis("Horizontal") * Time.deltaTime * PlayerSpeed;
+        var newXpos = Mathf.Clamp(transform.position.x + deltaX, xMinBound + BoundaryPadding, xMaxBound - BoundaryPadding);
 
         var deltaY = Input.GetAxis("Vertical") * Time.deltaTime * PlayerSpeed;
-        var newYpos = Mathf.Clamp(transform.position.y + deltaY,yMinBound+BoundaryPadding,yMaxBound-BoundaryPadding);
+        var newYpos = Mathf.Clamp(transform.position.y + deltaY, yMinBound + BoundaryPadding, yMaxBound - BoundaryPadding);
 
         transform.position = new Vector2(newXpos, newYpos);
-
-
-       
     }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        var missle = collision.gameObject.GetComponent<EnemyLaserHit>();
+        if (missle)
+            PlayerHealth--;
+
+        if (PlayerHealth <= 0)
+            Destroy(gameObject);
+    }
+
+
 }
