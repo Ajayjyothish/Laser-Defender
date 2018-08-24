@@ -7,44 +7,71 @@ public class EnemyPath : MonoBehaviour {
     [SerializeField] List<Transform> enemyPath;
     [SerializeField] float speed;
     [SerializeField] GameObject enemy;
-    [SerializeField] float ShootDelay;
-    [SerializeField] GameObject laser;
-    [SerializeField] float LaserSpeed;
+    [SerializeField] float radius = 0.5f;
+    [SerializeField] float spawnDelay = 2f;
+   
 
     int enemyPathIndex = 0;
     GameObject enemyShip;
+    Transform initialTransform;
+
+    private void OnDrawGizmos()
+    {
+        foreach(Transform point in enemyPath)
+        {
+            Gizmos.DrawWireSphere(point.position, radius);
+        }
+    }
 
     // Use this for initialization
     void Start ()
     {
-        GetStartLocation();
-        FireLaser();
+        
+         GetStartLocation();
+        
     }
 
    
     void Update ()
     {
-        FollowPath();
+       
+       
+        respawn();
 
     }
 
-
-    private void FireLaser()
+    private void respawn()
     {
-        InvokeRepeating("ShootAndWait",0.000001f,ShootDelay);
+        if (isAllChildrenDead())
+        {
+            enemyPathIndex = 0;
+            GetStartLocation();
+            Invoke("FollowPath", spawnDelay);
+
+        }
+        else
+            FollowPath();
+         
+            
     }
 
-    void ShootAndWait()
+    bool isAllChildrenDead()
     {
-        var lasers=  Instantiate(laser, transform.position, Quaternion.identity);
-        lasers.GetComponent<Rigidbody2D>().velocity = Vector2.down * LaserSpeed;
+        if (transform.childCount > 0)
+            return false;
+        else  { 
+            return true;
+        }
     }
+
+   
    
 
     
     private void GetStartLocation()
-    {
-        enemyShip = Instantiate(enemy, enemyPath[enemyPathIndex].position, transform.rotation);
+
+    {   
+        enemyShip = Instantiate(enemy, enemyPath[enemyPathIndex].position, transform.rotation) as GameObject;
         enemyShip.transform.parent = transform;
     }
     private void FollowPath()
@@ -54,14 +81,18 @@ public class EnemyPath : MonoBehaviour {
 
             var targetLocation = enemyPath[enemyPathIndex].position;
             var enemySpeed = speed * Time.deltaTime;
-            transform.position = Vector2.MoveTowards(transform.position, targetLocation, enemySpeed);
+            enemyShip. transform.position = Vector2.MoveTowards( enemyShip. transform.position, targetLocation, enemySpeed);
 
-            if (transform.position == targetLocation)
+            if (enemyShip. transform.position == targetLocation)
                 enemyPathIndex++;
 
         }
 
         else
-            Destroy(gameObject);
+        {
+
+            Destroy(enemyShip);
+           
+        }
     }
 }

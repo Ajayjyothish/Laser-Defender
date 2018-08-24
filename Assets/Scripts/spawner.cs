@@ -6,13 +6,13 @@ using UnityEngine;
 public class spawner : MonoBehaviour {
     //config parameters
     [SerializeField] GameObject lightShips;
+    [SerializeField] float radius=1f;
     [SerializeField] float height;
     [SerializeField] float width;
     [Range(1,10)] [SerializeField] float shipSpeed = 1f;
     [SerializeField] float shipBound=1.5f;
-    [SerializeField] GameObject laser;
-    [Range(1, 10)] [SerializeField] float laserSpeed = 2f;
-    [Range(0.1f,5)][SerializeField] float LaserDelay = 1f;
+    [SerializeField] float spawnDelay = 0.5f;
+   
 
     public bool moveLeft=true;
     float xMaxBound, xMinBound, yMinBound, yMaxBound;
@@ -22,29 +22,62 @@ public class spawner : MonoBehaviour {
     void Start ()
     {
         SetUpMoveBoundaries();
-        spawnEnemies();
-        FireLaser();
+        spawnUntillFull();
+      
     }
 
-        void Update()
+    void Update()
     {
         MoveOnScreenEnemy();
-       
+      
+        respawn();
 
     }
 
-    
-    
-
-
-    private void spawnEnemies()
+    private void respawn()
     {
-        foreach (Transform child in transform)
+        if (AllChildrenAreDead())
         {
-            GameObject ships = Instantiate(lightShips, child.position, child.rotation) as GameObject;
-            ships.transform.parent = child;
+
+            spawnUntillFull();
 
         }
+        
+       
+    }
+
+    Transform NextFreePosition()
+    {
+        foreach(Transform child in transform)
+        {
+            if (child.childCount == 0)
+                return child;
+        }
+        return null;
+    }
+
+    private bool AllChildrenAreDead()
+    {
+       foreach( Transform child in transform)
+        {
+            if (child.childCount > 0)
+                return false;
+            
+                
+        }
+        return true;
+    }
+
+    private void spawnUntillFull()
+    {
+        var nextPosition = NextFreePosition();
+        if (nextPosition) { 
+        GameObject ships = Instantiate(lightShips, nextPosition.position, nextPosition.rotation) as GameObject;
+        ships.transform.parent = nextPosition;
+        }if (NextFreePosition())
+            Invoke("spawnUntillFull", spawnDelay);
+        
+        
     }
 
     private void SetUpMoveBoundaries()
@@ -56,31 +89,14 @@ public class spawner : MonoBehaviour {
     private void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(width, height));
+        foreach(Transform child in transform)
+        {
+            Gizmos.DrawWireSphere(child.position, radius);
+        }
     }
 
-    private void FireLaser()
-    {
-        
-        InvokeRepeating("FireAndWait", 0.00001f, LaserDelay);
-    }
 
-    void FireAndWait()
-    {
-        
-        
-            foreach (Transform child in transform)
-            {
-                GameObject lasers = Instantiate(laser, child.position, child.rotation);
-                lasers.GetComponent<Rigidbody2D>().velocity = new Vector2(0, -laserSpeed);
-                
-               
-            }
-
-            
-
-        
-
-    }
+ 
 
     private void MoveOnScreenEnemy()
     {
@@ -105,4 +121,5 @@ public class spawner : MonoBehaviour {
             moveLeft = true;
         }
     }
+
 }

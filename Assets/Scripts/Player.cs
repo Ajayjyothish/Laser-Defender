@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class Player : MonoBehaviour
 {
@@ -12,16 +14,26 @@ public class Player : MonoBehaviour
     [SerializeField] float LaserSpeed = 5f;
     [SerializeField] float LaserDelay=0.1f;
     [SerializeField] float PlayerHealth=5f;
+    [SerializeField] AudioClip laserSound;
+    [SerializeField] AudioClip destroyedSound;
+    
+    [SerializeField] TextMeshProUGUI Health;
 
     //cached references
     GameObject laser;
     float xMaxBound, xMinBound, yMinBound, yMaxBound;
     Coroutine fireContinuously;
+    SceneLoader scene;
+    ScoreKeeper score;
+    
+
 
     void Start()
     {
         SetUpMoveBoundaries();
-        PlayerHealth *= 2;
+        Health.text = "Health: " + PlayerHealth;
+        scene = FindObjectOfType<SceneLoader>();
+        score = FindObjectOfType<ScoreKeeper>();
     }
 
     private void SetUpMoveBoundaries()
@@ -61,6 +73,7 @@ public class Player : MonoBehaviour
         while (true)
         {
             laser = Instantiate(PlayerLaser, transform.position, transform.rotation);
+            GetComponent<AudioSource>().PlayOneShot(laserSound);
             
             laser.GetComponent<Rigidbody2D>().velocity = new Vector2(0, LaserSpeed);
             yield return new WaitForSeconds(LaserDelay);
@@ -82,10 +95,20 @@ public class Player : MonoBehaviour
     {
         var missle = collision.gameObject.GetComponent<EnemyLaserHit>();
         if (missle)
-            PlayerHealth--;
+        {
+            PlayerHealth -= 1;
+            Health.text = "Health: " + PlayerHealth;
+            Destroy(collision.gameObject);
+            
 
+        }
         if (PlayerHealth <= 0)
+        {
+            AudioSource.PlayClipAtPoint(destroyedSound,new Vector3(transform.position.x,transform.position.y));
             Destroy(gameObject);
+            score.Reset();
+            scene.loadNextScene();
+        }
     }
     
 
